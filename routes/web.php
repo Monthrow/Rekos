@@ -54,7 +54,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/edit-barang/{id}', [BarangController::class, 'editBarang'])->name('barang.edit');
         Route::post('/edit-barang/{id}/update', [BarangController::class, 'updateBarang'])->name('barang.update');
         Route::post('/hapus-barang', [BarangController::class, 'hapusBarang'])->name('barang.hapus'); 
-        Route::get('/proses-konfirmasi/{id}', [BarangController::class, 'prosesKonfirmasi'])->name('barang.konfirmasi');
+        
+        // =========================================================================
+        // PERBAIKAN: Mengubah GET menjadi POST untuk mendukung form konfirmasi
+        // =========================================================================
+        Route::post('/proses-konfirmasi/{id}', [BarangController::class, 'prosesKonfirmasi'])->name('barang.konfirmasi');
     });
 
     // Khusus Role Admin
