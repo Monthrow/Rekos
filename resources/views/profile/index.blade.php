@@ -64,18 +64,18 @@
                 <hr class="border-slate-100">
 
                 <div class="flex flex-col sm:flex-row gap-4">
-                    @if(strtolower($user->role) === 'pembeli')
-                        <a href="{{ route('barang.jual') }}" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-emerald-100">
-                            <i class="fas fa-store text-sm"></i> Daftar Sebagai Penjual
-                        </a>
-                    @else
-                        <form action="{{ route('profile.switch-role') }}" method="POST" class="flex-1">
-                            @csrf
+                    <form action="{{ route('profile.switch-role') }}" method="POST" class="flex-1">
+                        @csrf
+                        @if(strtolower($user->role) === 'pembeli')
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-emerald-100">
+                                <i class="fas fa-store text-sm"></i> Beralih ke Mode Penjual
+                            </button>
+                        @else
                             <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-amber-100">
                                 <i class="fas fa-shopping-cart text-sm"></i> Beralih ke Mode Pembeli
                             </button>
-                        </form>
-                    @endif
+                        @endif
+                    </form>
 
                     <a href="{{ route('profile.edit') }}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 text-center shadow-sm shadow-blue-100">
                         <i class="fas fa-user-edit text-sm"></i> Edit Data Profil
@@ -93,7 +93,7 @@
                                 <table class="w-full text-left border-collapse">
                                     <thead>
                                         <tr class="border-b border-slate-100 text-slate-400 text-xs font-bold uppercase tracking-wider">
-                                            <th class="pb-3 pl-4">Produk</th>
+                                            <th class="pb-3 pl-4">Produk/Kos</th>
                                             <th class="pb-3">Harga</th>
                                             <th class="pb-3">Tanggal Transaksi</th>
                                             <th class="pb-3 text-center pr-4">Status</th>
@@ -152,8 +152,8 @@
                                                     <div class="text-xs text-slate-400">Trx ID: #{{ $trx->id_transaksi }}</div>
                                                 </td>
                                                 <td class="py-4">
-                                                    <div class="font-bold text-slate-700">{{ $trx->user->username ?? '-' }}</div>
-                                                    <div class="text-xs text-slate-400">{{ $trx->user->no_telp ?? '-' }}</div>
+                                                    <div class="font-bold text-slate-700">{{ $trx->user->username ?? 'User Kos' }}</div>
+                                                    <div class="text-xs text-slate-400">{{ $trx->user->no_telp ?? 'No Telp -' }}</div>
                                                 </td>
                                                 <td class="py-4 text-emerald-600 font-bold">Rp {{ number_format($trx->total_harga, 0, ',', '.') }}</td>
                                                 <td class="py-4 text-slate-500">{{ $trx->created_at ? $trx->created_at->format('d M Y, H:i') : '-' }}</td>
@@ -183,6 +183,8 @@
             {{-- TAB: LAPORAN PENJUALAN --}}
             @if(strtolower($user->role) === 'penjual')
             <div id="laporan-penjualan-tab" class="tab-content hidden space-y-6">
+
+                {{-- TOMBOL DOWNLOAD REPORT --}}
                 <div class="flex flex-wrap gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <div class="flex-1">
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Download Laporan</p>
