@@ -64,11 +64,25 @@
                 <hr class="border-slate-100">
 
                 <div class="flex flex-col sm:flex-row gap-4">
+                    {{-- PERBAIKAN LOGIKA SWITCH ROLE BERDASARKAN NO TELP & ALAMAT --}}
                     @if(strtolower($user->role) === 'pembeli')
-                        <a href="{{ route('barang.jual') }}" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-emerald-100">
-                            <i class="fas fa-store text-sm"></i> Daftar Sebagai Penjual
-                        </a>
+                        {{-- Memastikan no_telp dan alamat tidak null dan tidak string kosong --}}
+                        @if(!empty($user->no_telp) && !empty($user->alamat))
+                            {{-- Jika sudah mengisi no telp dan alamat, berarti sudah terdaftar -> Munculkan tombol Switch --}}
+                            <form action="{{ route('profile.switch-role') }}" method="POST" class="flex-1">
+                                @csrf
+                                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-emerald-100">
+                                    <i class="fas fa-store text-sm"></i> Beralih ke Mode Penjual
+                                </button>
+                            </form>
+                        @else
+                            {{-- Jika salah satu atau keduanya kosong -> Harus daftar penjual dulu --}}
+                            <a href="{{ route('barang.jual') }}" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-emerald-100">
+                                <i class="fas fa-store text-sm"></i> Daftar Sebagai Penjual
+                            </a>
+                        @endif
                     @else
+                        {{-- Jika saat ini role aktifnya adalah Penjual --}}
                         <form action="{{ route('profile.switch-role') }}" method="POST" class="flex-1">
                             @csrf
                             <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-amber-100">
