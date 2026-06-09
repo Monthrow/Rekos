@@ -56,16 +56,19 @@ Route::middleware(['auth'])->group(function () {
 
     // Khusus Role Penjual
     Route::middleware('role:penjual')->group(function () {
-        Route::get('/barang-saya', [BarangController::class, 'barangSaya'])->name('barang.saya');
-        Route::post('/jual-barang/upload', [BarangController::class, 'storeBarang'])->name('barang.store');
-        Route::get('/edit-barang/{id}', [BarangController::class, 'editBarang'])->name('barang.edit');
-        Route::post('/edit-barang/{id}/update', [BarangController::class, 'updateBarang'])->name('barang.update');
-        Route::post('/hapus-barang', [BarangController::class, 'hapusBarang'])->name('barang.hapus');
-        Route::get('/proses-konfirmasi/{id}', [BarangController::class, 'prosesKonfirmasi'])->name('barang.konfirmasi');
+    Route::get('/barang-saya', [BarangController::class, 'barangSaya'])->name('barang.saya');
+    Route::post('/jual-barang/upload', [BarangController::class, 'storeBarang'])->name('barang.store');
+    Route::get('/edit-barang/{id}', [BarangController::class, 'editBarang'])->name('barang.edit');
+    Route::post('/edit-barang/{id}/update', [BarangController::class, 'updateBarang'])->name('barang.update');
+    Route::post('/hapus-barang', [BarangController::class, 'hapusBarang'])->name('barang.hapus');
 
-        Route::get('/report/penjual/pdf', [ReportController::class, 'penjualPdf'])->name('report.penjual.pdf');
-        Route::get('/report/penjual/excel', [ReportController::class, 'penjualExcel'])->name('report.penjual.excel');
-    });
+    // Perbaikan: gunakan POST untuk proses konfirmasi
+    Route::post('/proses-konfirmasi/{id}', [BarangController::class, 'prosesKonfirmasi'])->name('barang.konfirmasi');
+
+    // Laporan penjual
+    Route::get('/report/penjual/pdf', [ReportController::class, 'penjualPdf'])->name('report.penjual.pdf');
+    Route::get('/report/penjual/excel', [ReportController::class, 'penjualExcel'])->name('report.penjual.excel');
+});
 
     // Khusus Role Admin
     Route::middleware('role:admin')->prefix('admin')->group(function () {
