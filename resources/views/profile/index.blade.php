@@ -64,11 +64,8 @@
                 <hr class="border-slate-100">
 
                 <div class="flex flex-col sm:flex-row gap-4">
-                    {{-- PERBAIKAN LOGIKA SWITCH ROLE BERDASARKAN NO TELP & ALAMAT --}}
                     @if(strtolower($user->role) === 'pembeli')
-                        {{-- Memastikan no_telp dan alamat tidak null dan tidak string kosong --}}
                         @if(!empty($user->no_telp) && !empty($user->alamat))
-                            {{-- Jika sudah mengisi no telp dan alamat, berarti sudah terdaftar -> Munculkan tombol Switch --}}
                             <form action="{{ route('profile.switch-role') }}" method="POST" class="flex-1">
                                 @csrf
                                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-emerald-100">
@@ -76,13 +73,11 @@
                                 </button>
                             </form>
                         @else
-                            {{-- Jika salah satu atau keduanya kosong -> Harus daftar penjual dulu --}}
                             <a href="{{ route('barang.jual') }}" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-emerald-100">
                                 <i class="fas fa-store text-sm"></i> Daftar Sebagai Penjual
                             </a>
                         @endif
                     @else
-                        {{-- Jika saat ini role aktifnya adalah Penjual --}}
                         <form action="{{ route('profile.switch-role') }}" method="POST" class="flex-1">
                             @csrf
                             <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-amber-100">
@@ -233,11 +228,11 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                        <h4 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider text-center">Grafik Keuntungan Pendapatan (Rupiah)</h4>
+                        <h4 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider text-center">Grafik Tren Pendapatan Bulanan (Rupiah)</h4>
                         <div class="h-60"><canvas id="chartDanaPenjualan"></canvas></div>
                     </div>
                     <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                        <h4 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider text-center">Grafik Volume Barang Terjual (Unit)</h4>
+                        <h4 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider text-center">Grafik Tren Volume Barang Terjual (Unit)</h4>
                         <div class="h-60"><canvas id="chartBarangPenjualan"></canvas></div>
                     </div>
                 </div>
@@ -268,11 +263,11 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                        <h4 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider text-center">Grafik Alokasi Dana Keluar (Rupiah)</h4>
+                        <h4 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider text-center">Grafik Tren Pengeluaran Bulanan (Rupiah)</h4>
                         <div class="h-60"><canvas id="chartDanaPembelian"></canvas></div>
                     </div>
                     <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                        <h4 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider text-center">Grafik Kuantitas Kebutuhan Dibeli (Unit)</h4>
+                        <h4 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider text-center">Grafik Tren Volume Barang Dibeli (Unit)</h4>
                         <div class="h-60"><canvas id="chartBarangPembelian"></canvas></div>
                     </div>
                 </div>
@@ -298,22 +293,49 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        const opsiGrafik = { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } };
+        const opsiGrafik = { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            scales: { 
+                y: { beginAtZero: true } 
+            } 
+        };
+
+        // Inject array dari backend ke format JSON agar dibaca JavaScript
+        const labelsGrafik = {!! json_encode($labels_grafik ?? []) !!};
+        const dataDanaPenjualan = {!! json_encode($data_dana_grafik ?? []) !!};
+        const dataBarangPenjualan = {!! json_encode($data_barang_grafik ?? []) !!};
 
         @if(strtolower($user->role) === 'penjual')
+            // Mengubah tipe menjadi 'line' agar visualisasi pergerakan naik-turun 12 bulan terlihat natural
             new Chart(document.getElementById('chartDanaPenjualan'), {
-                type: 'bar',
+                type: 'line',
                 data: {
-                    labels: ['1 Bulan Terakhir', '1 Tahun Terakhir'],
-                    datasets: [{ label: 'Total Keuntungan (Rp)', data: [{{ $sales_1_bulan_dana ?? 0 }}, {{ $sales_1_tahun_dana ?? 0 }}], backgroundColor: ['#10B981', '#059669'], borderRadius: 12 }]
+                    labels: labelsGrafik,
+                    datasets: [{ 
+                        label: 'Keuntungan Per Bulan (Rp)', 
+                        data: dataDanaPenjualan, 
+                        borderColor: '#10B981', 
+                        backgroundColor: 'rgba(16,185,129,0.1)', 
+                        fill: true,
+                        tension: 0.3 
+                    }]
                 },
                 options: opsiGrafik
             });
+
             new Chart(document.getElementById('chartBarangPenjualan'), {
                 type: 'line',
                 data: {
-                    labels: ['1 Bulan Terakhir', '1 Tahun Terakhir'],
-                    datasets: [{ label: 'Barang Laku (Unit)', data: [{{ $sales_1_bulan_barang ?? 0 }}, {{ $sales_1_tahun_barang ?? 0 }}], borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3 }]
+                    labels: labelsGrafik,
+                    datasets: [{ 
+                        label: 'Barang Laku (Unit)', 
+                        data: dataBarangPenjualan, 
+                        borderColor: '#3B82F6', 
+                        backgroundColor: 'rgba(59,130,246,0.1)', 
+                        fill: true, 
+                        tension: 0.3 
+                    }]
                 },
                 options: opsiGrafik
             });
@@ -321,18 +343,33 @@
 
         @if(strtolower($user->role) !== 'penjual')
             new Chart(document.getElementById('chartDanaPembelian'), {
-                type: 'bar',
+                type: 'line',
                 data: {
-                    labels: ['1 Bulan Terakhir', '1 Tahun Terakhir'],
-                    datasets: [{ label: 'Dana Keluar (Rp)', data: [{{ $buy_1_bulan_dana ?? 0 }}, {{ $buy_1_tahun_dana ?? 0 }}], backgroundColor: ['#3B82F6', '#1D4ED8'], borderRadius: 12 }]
+                    labels: labelsGrafik,
+                    datasets: [{ 
+                        label: 'Dana Keluar Per Bulan (Rp)', 
+                        data: dataDanaPenjualan, // Menggunakan array dana yang dinonaktifkan khusus akun pembeli
+                        borderColor: '#3B82F6', 
+                        backgroundColor: 'rgba(59,130,246,0.1)', 
+                        fill: true,
+                        tension: 0.3 
+                    }]
                 },
                 options: opsiGrafik
             });
+
             new Chart(document.getElementById('chartBarangPembelian'), {
                 type: 'line',
                 data: {
-                    labels: ['1 Bulan Terakhir', '1 Tahun Terakhir'],
-                    datasets: [{ label: 'Barang Dibeli (Unit)', data: [{{ $buy_1_bulan_barang ?? 0 }}, {{ $buy_1_tahun_barang ?? 0 }}], borderColor: '#818CF8', backgroundColor: 'rgba(129,140,248,0.1)', fill: true, tension: 0.3 }]
+                    labels: labelsGrafik,
+                    datasets: [{ 
+                        label: 'Barang Dibeli (Unit)', 
+                        data: dataBarangPenjualan, 
+                        borderColor: '#818CF8', 
+                        backgroundColor: 'rgba(129,140,248,0.1)', 
+                        fill: true, 
+                        tension: 0.3 
+                    }]
                 },
                 options: opsiGrafik
             });

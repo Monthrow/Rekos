@@ -28,6 +28,7 @@ class BarangController extends Controller {
                     $barang->waktu_beli = null;
                     $barang->save();
 
+                    // Menggunakan uppercase 'Pending' dan 'Batal' sesuai struktur database Anda
                     Transaksi::where('id_barang', $barang->id_barang)
                         ->where('status', 'Pending')
                         ->update(['status' => 'Batal']);
@@ -156,21 +157,20 @@ class BarangController extends Controller {
     }
 
     public function daftarPenjual(Request $request) {
-    $request->validate([
-        'alamat' => 'required|string',
-        'no_telp' => 'required|string',
-    ]);
+        $request->validate([
+            'alamat' => 'required|string',
+            'no_telp' => 'required|string',
+        ]);
 
-    $user = User::findOrFail(Auth::id());
-    $user->alamat = $request->alamat;
-    $user->no_telp = $request->no_telp;
-    $user->status_penjual = 'menunggu';
-    $user->tgl_daftar_penjual = now();
-    // role TIDAK diubah, tetap pembeli sampai admin approve
-    $user->save();
+        $user = User::findOrFail(Auth::id());
+        $user->alamat = $request->alamat;
+        $user->no_telp = $request->no_telp;
+        $user->status_penjual = 'menunggu';
+        $user->tgl_daftar_penjual = now();
+        $user->save();
 
-    return redirect()->route('profile.index')->with('success', 'Pendaftaran penjual berhasil dikirim! Menunggu konfirmasi admin dalam 24 jam.');
-}
+        return redirect()->route('profile.index')->with('success', 'Pendaftaran penjual berhasil dikirim! Menunggu konfirmasi admin dalam 24 jam.');
+    }
 
     public function storeBarang(Request $request) {
         $request->validate([
@@ -290,26 +290,23 @@ class BarangController extends Controller {
     }
 
     // =========================================================================
-    // FUNGSI BARU: HALAMAN PROFILE DENGAN LAPORAN STATISTIK & GRAFIK (CHART)
+    // FUNGSI PERBAIKAN: HALAMAN PROFILE DENGAN GRAFIK BULANAN DINAMIS
     // =========================================================================
     public function profil() {
         $id_user_login = Auth::id();
         $user = Auth::user();
 
         // 1. DATA RIWAYAT TRANSAKSI
-        // Riwayat Penjualan (Pesanan Masuk dari sisi barang milik penjual)
         $riwayat_penjualan = Transaksi::with(['barang', 'user'])
             ->whereHas('barang', function($query) use ($id_user_login) {
                 $query->where('id_user', $id_user_login);
             })->orderBy('id_transaksi', 'desc')->get();
 
-        // Riwayat Pembelian (Transaksi barang yang dibeli oleh user login)
         $riwayat_pembelian = Transaksi::with(['barang'])
             ->where('id_user', $id_user_login)
             ->orderBy('id_transaksi', 'desc')->get();
 
-        // 2. STATISTIK LAPORAN PENJUALAN (Khusus Role Penjual)
-        // Rentang waktu 1 Bulan Terakhir (30 Hari)
+        // 2. STATISTIK LAPORAN PENJUALAN (Khusus Kotak Ringkasan Penjual)
         $sales_1_bulan_barang = Transaksi::whereHas('barang', function($q) use ($id_user_login) {
                 $q->where('id_user', $id_user_login);
             })->where('status', 'Selesai')
@@ -320,7 +317,6 @@ class BarangController extends Controller {
             })->where('status', 'Selesai')
               ->where('created_at', '>=', now()->subDays(30))->sum('total_harga');
 
-        // Rentang waktu 1 Tahun Terakhir (365 Hari)
         $sales_1_tahun_barang = Transaksi::whereHas('barang', function($q) use ($id_user_login) {
                 $q->where('id_user', $id_user_login);
             })->where('status', 'Selesai')
@@ -331,8 +327,7 @@ class BarangController extends Controller {
             })->where('status', 'Selesai')
               ->where('created_at', '>=', now()->subYear())->sum('total_harga');
 
-        // 3. STATISTIK LAPORAN PEMBELIAN (Untuk Seluruh User / Pembeli)
-        // Rentang waktu 1 Bulan Terakhir (30 Hari)
+        // 3. STATISTIK LAPORAN PEMBELIAN (Untuk Kotak Ringkasan Pembeli)
         $buy_1_bulan_barang = Transaksi::where('id_user', $id_user_login)
             ->where('status', 'Selesai')
             ->where('created_at', '>=', now()->subDays(30))->sum('jumlah_beli');
@@ -341,7 +336,6 @@ class BarangController extends Controller {
             ->where('status', 'Selesai')
             ->where('created_at', '>=', now()->subDays(30))->sum('total_harga');
 
-        // Rentang waktu 1 Tahun Terakhir (365 Hari)
         $buy_1_tahun_barang = Transaksi::where('id_user', $id_user_login)
             ->where('status', 'Selesai')
             ->where('created_at', '>=', now()->subYear())->sum('jumlah_beli');
@@ -350,10 +344,41 @@ class BarangController extends Controller {
             ->where('status', 'Selesai')
             ->where('created_at', '>=', now()->subYear())->sum('total_harga');
 
+        // 4. PROSES GENERATE DATA GRAFIK (Looping Berkala 12 Bulan Terakhir)
+        $labels_grafik = [];
+        $data_dana_grafik = [];
+        $data_barang_grafik = [];
+
+        for ($i = 11; $i >= 0; $i--) {
+            $bulanTarget = now()->subMonths($i);
+            
+            // Mengambil nama bulan terlokalisasi (contoh: Januari, Februari, dst.)
+            $labels_grafik[] = $bulanTarget->translatedFormat('F');
+
+            // Query total keuntungan per bulan target
+            $data_dana_grafik[] = Transaksi::whereHas('barang', function($q) use ($id_user_login) {
+                    $q->where('id_user', $id_user_login);
+                })
+                ->where('status', 'Selesai')
+                ->whereMonth('created_at', $bulanTarget->month)
+                ->whereYear('created_at', $bulanTarget->year)
+                ->sum('total_harga') ?? 0;
+
+            // Query total volume barang terjual per bulan target
+            $data_barang_grafik[] = Transaksi::whereHas('barang', function($q) use ($id_user_login) {
+                    $q->where('id_user', $id_user_login);
+                })
+                ->where('status', 'Selesai')
+                ->whereMonth('created_at', $bulanTarget->month)
+                ->whereYear('created_at', $bulanTarget->year)
+                ->sum('jumlah_beli') ?? 0;
+        }
+
         return view('profile.index', compact(
             'user', 'riwayat_penjualan', 'riwayat_pembelian',
             'sales_1_bulan_barang', 'sales_1_bulan_dana', 'sales_1_tahun_barang', 'sales_1_tahun_dana',
-            'buy_1_bulan_barang', 'buy_1_bulan_dana', 'buy_1_tahun_barang', 'buy_1_tahun_dana'
+            'buy_1_bulan_barang', 'buy_1_bulan_dana', 'buy_1_tahun_barang', 'buy_1_tahun_dana',
+            'labels_grafik', 'data_dana_grafik', 'data_barang_grafik'
         ));
     }
 }
