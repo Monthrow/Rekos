@@ -11,7 +11,6 @@
 
     <div class="grid grid-cols-[16rem_1fr] h-screen w-screen overflow-hidden">
         
-        {{-- ================= SIDEBAR (KUNCI MATI KIRI) ================= --}}
         <aside class="bg-[#0B132B] border-r border-slate-800/60 h-full flex flex-col justify-between overflow-hidden">
             
             <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
@@ -45,16 +44,12 @@
                 </a>
             </div>
         </aside>
-        {{-- ================= END SIDEBAR ================= --}}
-
-
-        {{-- ================= KONTEN DASHBOARD UTAMA (KANAN) ================= --}}
+    
         <main class="h-full overflow-y-auto bg-[#060B19] p-8">
             <div class="max-w-7xl mx-auto">
                 @yield('content')
             </div>
         </main>
-        {{-- ================= END KONTEN ================= --}}
 
     </div>
 
