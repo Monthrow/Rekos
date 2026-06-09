@@ -45,14 +45,12 @@
              ========================================== -->
         <div class="mb-6">
             @if($id_user_login !== $id_penjual)
-                <!-- TAMPILAN UNTUK PEMBELI (Misal: Nayyara) -->
+                <!-- TAMPILAN UNTUK PEMBELI -->
                 @if($barang->status_barang === 'tersedia')
-                    <form action="{{ route('barang.bayar', $barang->id_barang) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-sm">
-                            <i class="fas fa-shopping-cart"></i> Beli Sekarang
-                        </button>
-                    </form>
+                    <a href="{{ route('transaksi.checkout', $barang->id_barang) }}" 
+                       class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-sm">
+                        <i class="fas fa-shopping-cart"></i> Beli Sekarang
+                    </a>
                 @elseif($barang->status_barang === 'pending' && $barang->id_pembeli == $id_user_login)
                     <!-- Tampilan Box Timer Pembeli -->
                     <div class="p-5 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl shadow-sm text-center">
@@ -79,7 +77,7 @@
                     </button>
                 @endif
             @else
-                <!-- TAMPILAN UNTUK PENJUAL (ArifDhuha) -->
+                <!-- TAMPILAN UNTUK PENJUAL -->
                 @if($barang->status_barang === 'pending')
                     @php
                         $pembeli_booking = $daftar_inbox->firstWhere('id_pembeli', $barang->id_pembeli);
@@ -243,13 +241,11 @@
      ========================================== -->
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Auto Scroll Ruang Obrolan ke paling bawah
         const box = document.getElementById('chatBox');
         if (box) {
             box.scrollTop = box.scrollHeight;
         }
 
-        // Logic Hitung Mundur Otomatis untuk Pembeli maupun Penjual
         @if(isset($waktu_habis) && $waktu_habis > 0)
             const targetTimestamp = {{ $waktu_habis }} * 1000; 
 

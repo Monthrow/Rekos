@@ -156,19 +156,21 @@ class BarangController extends Controller {
     }
 
     public function daftarPenjual(Request $request) {
-        $request->validate([
-            'alamat' => 'required|string',
-            'no_telp' => 'required|string',
-        ]);
+    $request->validate([
+        'alamat' => 'required|string',
+        'no_telp' => 'required|string',
+    ]);
 
-        $user = User::findOrFail(Auth::id());
-        $user->alamat = $request->alamat;
-        $user->no_telp = $request->no_telp;
-        $user->role = 'penjual';
-        $user->save();
+    $user = User::findOrFail(Auth::id());
+    $user->alamat = $request->alamat;
+    $user->no_telp = $request->no_telp;
+    $user->status_penjual = 'menunggu';
+    $user->tgl_daftar_penjual = now();
+    // role TIDAK diubah, tetap pembeli sampai admin approve
+    $user->save();
 
-        return redirect()->route('barang.jual')->with('success', 'Selamat! Akun Anda telah di-upgrade menjadi Penjual.');
-    }
+    return redirect()->route('profile.index')->with('success', 'Pendaftaran penjual berhasil dikirim! Menunggu konfirmasi admin dalam 24 jam.');
+}
 
     public function storeBarang(Request $request) {
         $request->validate([

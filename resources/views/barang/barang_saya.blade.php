@@ -25,7 +25,7 @@
                 <div class="grid grid-cols-2 gap-2 mt-auto pt-2 border-t border-slate-100">
                     <a href="{{ route('barang.edit', $b->id_barang) }}" class="text-center py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-bold border border-slate-200">Edit Data</a>
                     @if($b->status_barang === 'pending')
-                        <a href="{{ route('barang.konfirmasi', $b->id_barang) }}" class="text-center py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold">Selesai COD</a>
+                        <a href="{{ route('barang.konfirmasi', $b->id_barang) }}" class="text-center py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold">Selesai</a>
                     @else
                         <form action="{{ route('barang.hapus') }}" method="POST" onsubmit="return confirm('Hapus permanen barang ini?')">
                             @csrf

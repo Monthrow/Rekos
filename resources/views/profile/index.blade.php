@@ -1,4 +1,4 @@
-@extends('layouts.app') {{-- Sesuaikan nama layout utama aplikasi Anda --}}
+@extends('layouts.app')
 
 @section('content')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -48,6 +48,7 @@
                 @endif
             </div>
 
+            {{-- TAB: DATA PROFIL --}}
             <div id="data-profil-utama" class="tab-content space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-700">
                     <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -63,18 +64,18 @@
                 <hr class="border-slate-100">
 
                 <div class="flex flex-col sm:flex-row gap-4">
-                    <form action="{{ route('profile.switch-role') }}" method="POST" class="flex-1">
-                        @csrf
-                        @if(strtolower($user->role) === 'pembeli')
-                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-emerald-100">
-                                <i class="fas fa-store text-sm"></i> Beralih ke Mode Penjual
-                            </button>
-                        @else
+                    @if(strtolower($user->role) === 'pembeli')
+                        <a href="{{ route('barang.jual') }}" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-emerald-100">
+                            <i class="fas fa-store text-sm"></i> Daftar Sebagai Penjual
+                        </a>
+                    @else
+                        <form action="{{ route('profile.switch-role') }}" method="POST" class="flex-1">
+                            @csrf
                             <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-amber-100">
                                 <i class="fas fa-shopping-cart text-sm"></i> Beralih ke Mode Pembeli
                             </button>
-                        @endif
-                    </form>
+                        </form>
+                    @endif
 
                     <a href="{{ route('profile.edit') }}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-2 text-center shadow-sm shadow-blue-100">
                         <i class="fas fa-user-edit text-sm"></i> Edit Data Profil
@@ -88,12 +89,11 @@
                                 <i class="fas fa-shopping-bag text-blue-600 text-lg"></i>
                                 <h3 class="text-lg font-bold text-slate-800">Riwayat Pembelian & Booking Barang</h3>
                             </div>
-
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse">
                                     <thead>
                                         <tr class="border-b border-slate-100 text-slate-400 text-xs font-bold uppercase tracking-wider">
-                                            <th class="pb-3 pl-4">Produk/Kos</th>
+                                            <th class="pb-3 pl-4">Produk</th>
                                             <th class="pb-3">Harga</th>
                                             <th class="pb-3">Tanggal Transaksi</th>
                                             <th class="pb-3 text-center pr-4">Status</th>
@@ -133,7 +133,6 @@
                                 <i class="fas fa-file-invoice-dollar text-emerald-600 text-lg"></i>
                                 <h3 class="text-lg font-bold text-slate-800">Riwayat Penjualan / Pesanan Masuk</h3>
                             </div>
-
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse">
                                     <thead>
@@ -153,13 +152,11 @@
                                                     <div class="text-xs text-slate-400">Trx ID: #{{ $trx->id_transaksi }}</div>
                                                 </td>
                                                 <td class="py-4">
-                                                    <div class="font-bold text-slate-700">{{ $trx->user->username ?? 'User Kos' }}</div>
-                                                    <div class="text-xs text-slate-400">{{ $trx->user->no_telp ?? 'No Telp -' }}</div>
+                                                    <div class="font-bold text-slate-700">{{ $trx->user->username ?? '-' }}</div>
+                                                    <div class="text-xs text-slate-400">{{ $trx->user->no_telp ?? '-' }}</div>
                                                 </td>
                                                 <td class="py-4 text-emerald-600 font-bold">Rp {{ number_format($trx->total_harga, 0, ',', '.') }}</td>
-                                                <td class="py-4 text-slate-500">
-                                                    {{ $trx->created_at ? $trx->created_at->format('d M Y, H:i') : '-' }}
-                                                </td>
+                                                <td class="py-4 text-slate-500">{{ $trx->created_at ? $trx->created_at->format('d M Y, H:i') : '-' }}</td>
                                                 <td class="py-4 text-center pr-4">
                                                     <span class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide
                                                         {{ strtolower($trx->status) === 'selesai' ? 'bg-green-100 text-green-700' : (strtolower($trx->status) === 'batal' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700') }}">
@@ -171,7 +168,7 @@
                                             <tr>
                                                 <td colspan="5" class="text-center py-8 text-slate-400 font-medium">
                                                     <i class="fas fa-box-open text-2xl block mb-2 text-slate-300"></i>
-                                                    Belum ada riwayat produk kos/barang yang terjual.
+                                                    Belum ada riwayat produk yang terjual.
                                                 </td>
                                             </tr>
                                         @endforelse
@@ -183,8 +180,24 @@
                 </div>
             </div>
 
+            {{-- TAB: LAPORAN PENJUALAN --}}
             @if(strtolower($user->role) === 'penjual')
             <div id="laporan-penjualan-tab" class="tab-content hidden space-y-6">
+                <div class="flex flex-wrap gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex-1">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Download Laporan</p>
+                        <p class="text-xs text-slate-400">Unduh laporan transaksi penjualan kamu</p>
+                    </div>
+                    <a href="{{ route('report.penjual.pdf') }}" 
+                       class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-sm">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </a>
+                    <a href="{{ route('report.penjual.excel') }}" 
+                       class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-sm">
+                        <i class="fas fa-file-excel"></i> Download Excel
+                    </a>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Produk Terjual (30 Hari)</p>
@@ -217,6 +230,7 @@
             </div>
             @endif
 
+            {{-- TAB: LAPORAN PEMBELIAN --}}
             @if(strtolower($user->role) !== 'penjual')
             <div id="laporan-pembelian-tab" class="tab-content hidden space-y-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -259,87 +273,52 @@
 <script>
     function bukaTab(idTab) {
         document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
-        
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
             btn.classList.add('bg-slate-100', 'text-slate-700');
         });
-
         document.getElementById(idTab).classList.remove('hidden');
-        
         const activeBtn = document.getElementById('btn-' + idTab);
         activeBtn.classList.remove('bg-slate-100', 'text-slate-700');
         activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        const opsiGrafik = { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            scales: { y: { beginAtZero: true } } 
-        };
+        const opsiGrafik = { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } };
 
-        // RENDER GRAFIK PENJUALAN
         @if(strtolower($user->role) === 'penjual')
             new Chart(document.getElementById('chartDanaPenjualan'), {
                 type: 'bar',
                 data: {
                     labels: ['1 Bulan Terakhir', '1 Tahun Terakhir'],
-                    datasets: [{
-                        label: 'Total Keuntungan (Rp)',
-                        data: [{{ $sales_1_bulan_dana ?? 0 }}, {{ $sales_1_tahun_dana ?? 0 }}],
-                        backgroundColor: ['#10B981', '#059669'],
-                        borderRadius: 12
-                    }]
+                    datasets: [{ label: 'Total Keuntungan (Rp)', data: [{{ $sales_1_bulan_dana ?? 0 }}, {{ $sales_1_tahun_dana ?? 0 }}], backgroundColor: ['#10B981', '#059669'], borderRadius: 12 }]
                 },
                 options: opsiGrafik
             });
-
             new Chart(document.getElementById('chartBarangPenjualan'), {
                 type: 'line',
                 data: {
                     labels: ['1 Bulan Terakhir', '1 Tahun Terakhir'],
-                    datasets: [{
-                        label: 'Barang Laku (Unit)',
-                        data: [{{ $sales_1_bulan_barang ?? 0 }}, {{ $sales_1_tahun_barang ?? 0 }}],
-                        borderColor: '#3B82F6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        fill: true,
-                        tension: 0.3
-                    }]
+                    datasets: [{ label: 'Barang Laku (Unit)', data: [{{ $sales_1_bulan_barang ?? 0 }}, {{ $sales_1_tahun_barang ?? 0 }}], borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3 }]
                 },
                 options: opsiGrafik
             });
         @endif
 
-        // RENDER GRAFIK PEMBELIAN
         @if(strtolower($user->role) !== 'penjual')
             new Chart(document.getElementById('chartDanaPembelian'), {
                 type: 'bar',
                 data: {
                     labels: ['1 Bulan Terakhir', '1 Tahun Terakhir'],
-                    datasets: [{
-                        label: 'Dana Keluar (Rp)',
-                        data: [{{ $buy_1_bulan_dana ?? 0 }}, {{ $buy_1_tahun_dana ?? 0 }}],
-                        backgroundColor: ['#3B82F6', '#1D4ED8'],
-                        borderRadius: 12
-                    }]
+                    datasets: [{ label: 'Dana Keluar (Rp)', data: [{{ $buy_1_bulan_dana ?? 0 }}, {{ $buy_1_tahun_dana ?? 0 }}], backgroundColor: ['#3B82F6', '#1D4ED8'], borderRadius: 12 }]
                 },
                 options: opsiGrafik
             });
-
             new Chart(document.getElementById('chartBarangPembelian'), {
                 type: 'line',
                 data: {
                     labels: ['1 Bulan Terakhir', '1 Tahun Terakhir'],
-                    datasets: [{
-                        label: 'Barang Dibeli (Unit)',
-                        data: [{{ $buy_1_bulan_barang ?? 0 }}, {{ $buy_1_tahun_barang ?? 0 }}],
-                        borderColor: '#818CF8',
-                        backgroundColor: 'rgba(129, 140, 248, 0.1)',
-                        fill: true,
-                        tension: 0.3
-                    }]
+                    datasets: [{ label: 'Barang Dibeli (Unit)', data: [{{ $buy_1_bulan_barang ?? 0 }}, {{ $buy_1_tahun_barang ?? 0 }}], borderColor: '#818CF8', backgroundColor: 'rgba(129,140,248,0.1)', fill: true, tension: 0.3 }]
                 },
                 options: opsiGrafik
             });
